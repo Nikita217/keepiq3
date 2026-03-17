@@ -16,3 +16,5 @@ coverage.xml
 htmlcov/
 backend/.coverage
 frontend/.DS_Store
+
+*.tsbuildinfo
