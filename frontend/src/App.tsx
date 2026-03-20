@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { HashRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import { AppShell } from './components/AppShell';
 import { EmptyState } from './components/EmptyState';
@@ -42,7 +42,7 @@ export default function App() {
   }, [error, loading, token]);
 
   return (
-    <HashRouter>
+    <MemoryRouter initialEntries={['/']}>
       {loading ? <ShellState title="Подключаюсь" body="Проверяю Telegram-подпись и поднимаю твои данные." /> : null}
       {!loading && (error || !token) ? <ShellState title="Не удалось войти" body={error ?? 'Проверь API и Telegram initData.'} /> : null}
       {!loading && token ? (
@@ -54,6 +54,6 @@ export default function App() {
           <Route path="/search" element={<SearchPage token={token} />} />
         </Routes>
       ) : null}
-    </HashRouter>
+    </MemoryRouter>
   );
 }
