@@ -1,4 +1,5 @@
-﻿import { HashRouter, Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import { HashRouter, Route, Routes } from 'react-router-dom';
 
 import { AppShell } from './components/AppShell';
 import { EmptyState } from './components/EmptyState';
@@ -22,6 +23,23 @@ function ShellState({ title, body }: { title: string; body: string }) {
 
 export default function App() {
   const { token, loading, error } = useAuth();
+
+  useEffect(() => {
+    const boot = window.__KEEPIQ_BOOT__;
+    if (!boot) return;
+
+    if (loading) {
+      boot.set('Подключаюсь к Telegram и API...');
+      return;
+    }
+
+    if (error || !token) {
+      boot.set(`Не удалось войти.\n${error ?? 'Проверь API и Telegram initData.'}`);
+      return;
+    }
+
+    boot.clear();
+  }, [error, loading, token]);
 
   return (
     <HashRouter>

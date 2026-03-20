@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { API_BASE, apiRequest } from '../api/client';
 import type { AuthResponse } from '../api/types';
@@ -6,8 +6,19 @@ import { getInitData } from '../lib/telegram';
 
 const TOKEN_KEY = 'keepiq_token';
 
+function isLocalHost(hostname: string) {
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
 export function useAuth() {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const [token, setToken] = useState<string | null>(() => {
+    const initData = getInitData();
+    if (!initData && !isLocalHost(window.location.hostname)) {
+      localStorage.removeItem(TOKEN_KEY);
+      return null;
+    }
+    return localStorage.getItem(TOKEN_KEY);
+  });
   const [user, setUser] = useState<AuthResponse['user'] | null>(null);
   const [loading, setLoading] = useState(!token);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +32,9 @@ export function useAuth() {
     const run = async () => {
       try {
         const initData = getInitData();
+        if (!initData && !isLocalHost(window.location.hostname)) {
+          throw new Error('Mini App открыт вне Telegram WebApp. Открой его кнопкой в боте.');
+        }
         const response = initData
           ? await apiRequest<AuthResponse>('/auth/telegram', { method: 'POST', body: JSON.stringify({ init_data: initData }) })
           : await apiRequest<AuthResponse>('/auth/dev', { method: 'POST' });

@@ -21,5 +21,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </React.StrictMode>,
 );
-
-window.__KEEPIQ_BOOT__?.clear();
