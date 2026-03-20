@@ -1,6 +1,7 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from urllib.parse import urlsplit, urlunsplit
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +14,14 @@ from app.core.logging import configure_logging
 settings = get_settings()
 
 
+def normalize_origin(url: str) -> str:
+    '''Reduce a configured URL to the exact origin string expected by CORS.'''
+    parts = urlsplit(url)
+    if not parts.scheme or not parts.netloc:
+        return url.rstrip('/')
+    return urlunsplit((parts.scheme, parts.netloc, '', '', ''))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
@@ -23,10 +32,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title=settings.app_name, debug=settings.app_debug, lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_base_url, settings.app_base_url, "http://localhost:5173"],
+    allow_origins=[
+        normalize_origin(settings.frontend_base_url),
+        normalize_origin(settings.app_base_url),
+        'http://localhost:5173',
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 app.include_router(api_router, prefix=settings.api_prefix)
 
