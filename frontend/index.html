@@ -18,10 +18,11 @@
         justify-content: center;
         padding: 24px;
         background:
-          radial-gradient(circle at top left, rgba(22, 113, 111, 0.18), transparent 32%),
-          radial-gradient(circle at top right, rgba(232, 115, 71, 0.16), transparent 28%),
-          linear-gradient(180deg, #faf6f0 0%, #efe8dd 100%);
-        color: #1f2b34;
+          radial-gradient(circle at top left, rgba(104, 143, 131, 0.24), transparent 32%),
+          radial-gradient(circle at 85% 12%, rgba(193, 140, 118, 0.16), transparent 24%),
+          radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.38), transparent 36%),
+          linear-gradient(160deg, #e8eef1 0%, #d6dee3 100%);
+        color: #16212b;
         font-family: 'Manrope', system-ui, sans-serif;
       }
 
@@ -31,12 +32,16 @@
 
       .boot-card {
         width: min(100%, 420px);
-        border: 1px solid rgba(49, 78, 94, 0.12);
-        border-radius: 28px;
-        background: rgba(255, 251, 247, 0.9);
+        border: 1px solid rgba(22, 33, 43, 0.1);
+        border-radius: 32px;
+        background:
+          linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.22)),
+          rgba(252, 253, 255, 0.7);
         padding: 22px;
-        box-shadow: 0 10px 30px rgba(31, 43, 52, 0.08);
-        backdrop-filter: blur(14px);
+        box-shadow:
+          0 24px 60px rgba(13, 20, 28, 0.14),
+          inset 0 1px 0 rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(22px) saturate(160%);
       }
 
       .boot-label {
@@ -44,7 +49,7 @@
         font-weight: 700;
         letter-spacing: 0.24em;
         text-transform: uppercase;
-        color: #6c7b84;
+        color: #5e6d79;
       }
 
       .boot-title {
@@ -58,7 +63,7 @@
         margin: 14px 0 0;
         font-size: 14px;
         line-height: 1.5;
-        color: #6c7b84;
+        color: #5e6d79;
         white-space: pre-wrap;
         word-break: break-word;
       }

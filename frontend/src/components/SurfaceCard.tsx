@@ -1,14 +1,18 @@
 ﻿import clsx from 'clsx';
 import type { PropsWithChildren } from 'react';
 
-export function SurfaceCard({ children, tone = 'default' }: PropsWithChildren<{ tone?: 'default' | 'accent' | 'warning' }>) {
+export function SurfaceCard({
+  children,
+  tone = 'default',
+  className,
+}: PropsWithChildren<{ tone?: 'default' | 'accent' | 'warning'; className?: string }>) {
   return (
     <section
       className={clsx(
-        'rounded-[28px] border p-4 shadow-soft backdrop-blur-xl',
-        tone === 'default' && 'border-line bg-card',
-        tone === 'accent' && 'border-transparent bg-[var(--accent-soft)]',
-        tone === 'warning' && 'border-transparent bg-[rgba(232,115,71,0.12)]',
+        'glass-surface rounded-[30px] p-4 shadow-soft sm:p-5',
+        tone === 'accent' && 'glass-surface--accent',
+        tone === 'warning' && 'glass-surface--warning',
+        className,
       )}
     >
       {children}

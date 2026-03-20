@@ -13,15 +13,15 @@ export function EditorSheet({
   const [loading, setLoading] = useState(false);
 
   return (
-    <div className="rounded-[24px] border border-line bg-white/75 p-4">
+    <div className="glass-tile rounded-[26px] p-4">
       <h4 className="text-sm font-bold text-ink">{title}</h4>
       <textarea
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        className="mt-3 min-h-24 w-full rounded-[18px] border border-line bg-white px-4 py-3 text-sm outline-none"
+        className="glass-input mt-3 min-h-[7.5rem]"
       />
       <button
-        className="mt-3 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+        className="glass-button glass-button-accent mt-3 w-full disabled:opacity-60 sm:w-auto"
         disabled={loading}
         onClick={async () => {
           setLoading(true);

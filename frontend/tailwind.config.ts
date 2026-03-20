@@ -3,12 +3,13 @@
   theme: {
     extend: {
       boxShadow: {
-        soft: '0 18px 50px rgba(18, 32, 46, 0.12)',
+        soft: '0 24px 60px rgba(13, 20, 28, 0.14)',
       },
       colors: {
         ink: 'var(--ink)',
+        'ink-soft': 'var(--ink-soft)',
         canvas: 'var(--canvas)',
-        card: 'var(--card)',
+        card: 'var(--panel)',
         accent: 'var(--accent)',
         muted: 'var(--muted)',
         line: 'var(--line)',

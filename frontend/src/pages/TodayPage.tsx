@@ -34,13 +34,35 @@ export function TodayPage({ token }: { token: string }) {
         </>
       }
     >
-      <SurfaceCard tone="accent">
+      <SurfaceCard tone="accent" className="space-y-4">
         <SectionTitle title="Главное" subtitle="Просроченное и всё, что должно случиться сегодня." />
         {!data || total === 0 ? <EmptyState title="На сегодня тихо" body="Можно выдохнуть или разобрать входящие." /> : null}
-        <div className="space-y-3">
-          {data?.overdue.map((task) => <TaskRow key={`overdue-${task.id}`} task={task} onDone={() => markDone(task.id)} onSnooze={() => snooze(task.id)} />)}
-          {data?.today.map((task) => <TaskRow key={`today-${task.id}`} task={task} onDone={() => markDone(task.id)} onSnooze={() => snooze(task.id)} />)}
-        </div>
+        {data?.overdue.length ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="glass-chip glass-chip--warning">Просрочено</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">{data.overdue.length}</span>
+            </div>
+            <div className="space-y-3">
+              {data.overdue.map((task) => (
+                <TaskRow key={`overdue-${task.id}`} task={task} onDone={() => markDone(task.id)} onSnooze={() => snooze(task.id)} />
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {data?.today.length ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="glass-chip glass-chip--accent">На сегодня</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">{data.today.length}</span>
+            </div>
+            <div className="space-y-3">
+              {data.today.map((task) => (
+                <TaskRow key={`today-${task.id}`} task={task} onDone={() => markDone(task.id)} onSnooze={() => snooze(task.id)} />
+              ))}
+            </div>
+          </div>
+        ) : null}
       </SurfaceCard>
     </AppShell>
   );

@@ -4,9 +4,9 @@ import { BottomNav } from './BottomNav';
 
 export function AppShell({ children, header }: PropsWithChildren<{ header: ReactNode }>) {
   return (
-    <div className="mx-auto min-h-screen max-w-md px-3 pb-28 pt-4">
-      <div className="rounded-[32px] border border-line bg-card p-4 shadow-soft backdrop-blur-xl">
-        {header}
+    <div className="mx-auto min-h-screen w-full max-w-[30rem] px-4 pb-36 pt-4 sm:px-5">
+      <div className="glass-surface glass-surface--strong rounded-[34px] p-5 shadow-soft sm:p-6">
+        <div className="min-w-0 break-words">{header}</div>
       </div>
       <div className="mt-4 space-y-4">{children}</div>
       <BottomNav />
