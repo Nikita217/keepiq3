@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
@@ -8,8 +8,95 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+      #boot-status {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background:
+          radial-gradient(circle at top left, rgba(22, 113, 111, 0.18), transparent 32%),
+          radial-gradient(circle at top right, rgba(232, 115, 71, 0.16), transparent 28%),
+          linear-gradient(180deg, #faf6f0 0%, #efe8dd 100%);
+        color: #1f2b34;
+        font-family: 'Manrope', system-ui, sans-serif;
+      }
+
+      #boot-status[hidden] {
+        display: none;
+      }
+
+      .boot-card {
+        width: min(100%, 420px);
+        border: 1px solid rgba(49, 78, 94, 0.12);
+        border-radius: 28px;
+        background: rgba(255, 251, 247, 0.9);
+        padding: 22px;
+        box-shadow: 0 10px 30px rgba(31, 43, 52, 0.08);
+        backdrop-filter: blur(14px);
+      }
+
+      .boot-label {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: #6c7b84;
+      }
+
+      .boot-title {
+        margin: 10px 0 0;
+        font-size: 32px;
+        font-weight: 800;
+        line-height: 1.05;
+      }
+
+      .boot-body {
+        margin: 14px 0 0;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #6c7b84;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+    <script>
+      (function () {
+        const boot = {
+          set(message) {
+            const body = document.getElementById('boot-status-body');
+            const node = document.getElementById('boot-status');
+            if (body) body.textContent = message;
+            if (node) node.hidden = false;
+          },
+          clear() {
+            const node = document.getElementById('boot-status');
+            if (node) node.hidden = true;
+          },
+        };
+        window.__KEEPIQ_BOOT__ = boot;
+        window.addEventListener('error', function (event) {
+          const message = event && event.message ? event.message : 'Unknown frontend error';
+          boot.set('Фронтенд упал до запуска приложения.\n' + message);
+        });
+        window.addEventListener('unhandledrejection', function (event) {
+          const reason = event && event.reason ? String(event.reason) : 'Unknown promise rejection';
+          boot.set('Необработанная ошибка во фронтенде.\n' + reason);
+        });
+      })();
+    </script>
   </head>
   <body>
+    <div id="boot-status">
+      <div class="boot-card">
+        <div class="boot-label">KeepiQ</div>
+        <h1 class="boot-title">Загружаю KeepiQ</h1>
+        <div class="boot-body" id="boot-status-body">Проверяю Mini App и поднимаю интерфейс.</div>
+      </div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
