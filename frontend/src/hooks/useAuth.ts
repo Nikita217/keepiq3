@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 
-import { apiRequest } from '../api/client';
+import { API_BASE, apiRequest } from '../api/client';
 import type { AuthResponse } from '../api/types';
 import { getInitData } from '../lib/telegram';
 
@@ -28,7 +28,9 @@ export function useAuth() {
         setToken(response.access_token);
         setUser(response.user);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Не удалось авторизоваться.');
+        const baseMessage = err instanceof Error ? err.message : 'Не удалось авторизоваться.';
+        const initDataPresent = getInitData() ? 'yes' : 'no';
+        setError(`${baseMessage} | api=${API_BASE || 'missing'} | initData=${initDataPresent}`);
       } finally {
         setLoading(false);
       }
