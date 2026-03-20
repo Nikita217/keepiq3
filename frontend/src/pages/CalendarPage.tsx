@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import type { Task } from '../api/types';
 import { AppShell } from '../components/AppShell';
@@ -115,7 +115,7 @@ export function CalendarPage({ token }: { token: string }) {
                   className={[
                     'min-h-[2.85rem] rounded-[18px] px-0 text-sm font-semibold transition',
                     day.inMonth ? 'text-ink' : 'text-muted/45',
-                    isSelected ? 'bg-[rgba(16,27,37,0.9)] text-[rgba(247,250,252,0.98)] shadow-[0_12px_25px_rgba(16,27,37,0.18)]' : 'glass-tile',
+                    isSelected ? 'glass-state-active text-ink shadow-[0_14px_28px_rgba(13,20,28,0.14)]' : 'glass-tile',
                     !isSelected && isToday ? 'border border-[rgba(49,95,87,0.24)] text-[var(--accent-deep)]' : '',
                   ].join(' ')}
                   onClick={() => setDate(day.value)}
