@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>KeepiQ Diagnostic</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+      :root {
+        --bg: #f3ede4;
+        --card: rgba(255,255,255,0.88);
+        --line: rgba(38, 56, 64, 0.12);
+        --text: #1f2b34;
+        --muted: #66757f;
+        --ok: #0f8a4b;
+        --err: #b23a2e;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at top left, rgba(22, 113, 111, 0.18), transparent 30%),
+          radial-gradient(circle at top right, rgba(232, 115, 71, 0.15), transparent 28%),
+          linear-gradient(180deg, #faf6f0 0%, #efe8dd 100%);
+        font-family: Manrope, system-ui, sans-serif;
+        color: var(--text);
+      }
+      main {
+        max-width: 420px;
+        margin: 0 auto;
+        padding: 16px 12px 24px;
+      }
+      .card {
+        margin-bottom: 12px;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: var(--card);
+        box-shadow: 0 10px 30px rgba(31,43,52,0.06);
+        backdrop-filter: blur(12px);
+        padding: 16px;
+      }
+      h1 { margin: 0; font-size: 28px; }
+      h2 { margin: 0 0 10px; font-size: 16px; }
+      p { margin: 8px 0 0; color: var(--muted); }
+      pre {
+        margin: 10px 0 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text);
+      }
+      .ok { color: var(--ok); font-weight: 700; }
+      .err { color: var(--err); font-weight: 700; }
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 16px;
+        background: #1f2b34;
+        color: #fff;
+        font: inherit;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <div style="font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); font-weight:700;">KeepiQ</div>
+        <h1>Mini App Diagnostic</h1>
+        <p>Эта страница проверяет Telegram WebView напрямую, без React.</p>
+      </section>
+      <section class="card">
+        <h2>Состояние</h2>
+        <pre id="summary">Запускаю проверки...</pre>
+      </section>
+      <section class="card">
+        <h2>Telegram WebApp</h2>
+        <pre id="telegram"></pre>
+      </section>
+      <section class="card">
+        <h2>Health Check</h2>
+        <pre id="health"></pre>
+      </section>
+      <section class="card">
+        <h2>Telegram Auth Probe</h2>
+        <pre id="auth"></pre>
+      </section>
+      <section class="card">
+        <button id="rerun" type="button">Повторить проверки</button>
+      </section>
+    </main>
+    <script>
+      const API_BASE = 'https://keepiq3-api.onrender.com/api/v1';
+      const $ = (id) => document.getElementById(id);
+
+      function write(id, value, ok) {
+        const node = $(id);
+        node.textContent = value;
+        node.className = ok === true ? 'ok' : ok === false ? 'err' : '';
+      }
+
+      async function probe() {
+        write('summary', 'Проверяю окружение...');
+
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        if (tg) {
+          try { tg.ready(); } catch (_) {}
+          try { tg.expand(); } catch (_) {}
+        }
+
+        write('telegram', JSON.stringify({
+          hasTelegramObject: Boolean(window.Telegram),
+          hasWebApp: Boolean(tg),
+          location: window.location.href,
+          userAgent: navigator.userAgent,
+          initDataLength: tg && tg.initData ? tg.initData.length : 0,
+          platform: tg && tg.platform ? tg.platform : null,
+          version: tg && tg.version ? tg.version : null
+        }, null, 2));
+
+        try {
+          const res = await fetch(API_BASE + '/health', { method: 'GET' });
+          const text = await res.text();
+          write('health', 'HTTP ' + res.status + '\n' + text, res.ok);
+        } catch (error) {
+          write('health', String(error), false);
+        }
+
+        try {
+          const initData = tg && tg.initData ? tg.initData : '';
+          const res = await fetch(API_BASE + '/auth/telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ init_data: initData })
+          });
+          const text = await res.text();
+          write('auth', 'HTTP ' + res.status + '\n' + text, res.ok);
+        } catch (error) {
+          write('auth', String(error), false);
+        }
+
+        write('summary', 'Проверки завершены. Смотри блоки ниже.');
+      }
+
+      window.addEventListener('error', (event) => {
+        write('summary', 'JS error: ' + (event.message || 'Unknown error'), false);
+      });
+      window.addEventListener('unhandledrejection', (event) => {
+        write('summary', 'Promise rejection: ' + String(event.reason || 'Unknown rejection'), false);
+      });
+      $('rerun').addEventListener('click', () => { void probe(); });
+      void probe();
+    </script>
+  </body>
+</html>
