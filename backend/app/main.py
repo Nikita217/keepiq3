@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from contextlib import asynccontextmanager
 from urllib.parse import urlsplit, urlunsplit
 
@@ -22,6 +23,17 @@ def normalize_origin(url: str) -> str:
     return urlunsplit((parts.scheme, parts.netloc, '', '', ''))
 
 
+def build_origin_regex(url: str) -> str | None:
+    '''Allow Cloudflare Pages preview subdomains for the configured frontend host.'''
+    parts = urlsplit(url)
+    host = parts.hostname
+    if not parts.scheme or not host:
+        return None
+    if host.endswith('.pages.dev'):
+        return rf'{re.escape(parts.scheme)}://(?:[a-z0-9-]+\.)?{re.escape(host)}'
+    return None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
@@ -37,6 +49,7 @@ app.add_middleware(
         normalize_origin(settings.app_base_url),
         'http://localhost:5173',
     ],
+    allow_origin_regex=build_origin_regex(settings.frontend_base_url),
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
