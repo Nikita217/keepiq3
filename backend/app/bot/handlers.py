@@ -10,13 +10,16 @@ from app.bot.extractor import TelegramMessageExtractor
 from app.bot.keyboards import action_keyboard, mini_app_keyboard
 from app.copy.templates import (
     build_analysis_message,
+    build_continue_conversation_message,
     build_keep_inbox_message,
     build_list_saved_message,
     build_task_saved_message,
+    build_tasks_split_message,
 )
 from app.db.session import SessionLocal
 from app.services.actions import ActionService
 from app.services.ai_pipeline import AIProcessingService
+from app.services.conversations import ConversationService
 from app.services.inbox import InboxService
 from app.services.tasks import TaskService
 from app.services.users import UserService
@@ -27,6 +30,7 @@ inbox_service = InboxService()
 ai_service = AIProcessingService()
 action_service = ActionService()
 task_service = TaskService()
+conversation_service = ConversationService()
 extractor = TelegramMessageExtractor()
 
 
@@ -34,7 +38,7 @@ extractor = TelegramMessageExtractor()
 async def start(message: Message) -> None:
     text = (
         "Сюда можно присылать текст, голосовые, скрины, ссылки и пересланные сообщения. "
-        "Я разберу это и предложу сохранить как задачу, список или оставить во входящих."
+        "Я разберу это, предложу сохранить как задачу или список и при необходимости смогу продолжить обсуждение."
     )
     await message.answer(text, reply_markup=mini_app_keyboard())
 
@@ -75,9 +79,24 @@ async def handle_incoming(message: Message) -> None:
         inbox_item = await inbox_service.get_by_id(session, user.id, inbox_item.id)
         if not inbox_item:
             return
+
+        conversation = await conversation_service.get_active_for_user(session, user.id)
+        conversation_context = conversation_service.build_prompt_context(conversation)
+
         try:
-            understanding, embedding = await ai_service.analyze(inbox_item=inbox_item, user=user)
+            understanding, embedding = await ai_service.analyze(
+                inbox_item=inbox_item,
+                user=user,
+                conversation_context=conversation_context,
+            )
             await inbox_service.apply_understanding(session, item=inbox_item, understanding=understanding, embedding=embedding)
+            if conversation:
+                await conversation_service.record_turn(
+                    session,
+                    conversation=conversation,
+                    inbox_item=inbox_item,
+                    understanding=understanding,
+                )
             actions = await action_service.create_for_inbox(session, user=user, inbox_item=inbox_item, understanding=understanding)
             await session.commit()
         except Exception as exc:  # noqa: BLE001
@@ -138,6 +157,12 @@ async def handle_action(callback: CallbackQuery) -> None:
         count = len(understanding.list_items)
         await callback.answer("Сохранил список.")
         await callback.message.answer(build_list_saved_message(task_list.title, count))
+    elif result["kind"] == "task_split":
+        await callback.answer("Разбил на задачи.")
+        await callback.message.answer(build_tasks_split_message(result["count"]))
+    elif result["kind"] == "conversation":
+        await callback.answer("Продолжаем.")
+        await callback.message.answer(build_continue_conversation_message(understanding))
     else:
         await callback.answer("Оставил во входящих.")
         await callback.message.answer(build_keep_inbox_message())
