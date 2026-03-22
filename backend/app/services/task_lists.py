@@ -1,12 +1,13 @@
 ﻿from __future__ import annotations
 
-from app.ai.schemas import DetectedType, StructuredUnderstanding
-from app.models.inbox_item import InboxItem
-from app.models.task_list import TaskList
-from app.models.user import User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+from app.ai.schemas import StructuredUnderstanding
+from app.models.inbox_item import InboxItem
+from app.models.task_list import TaskList
+from app.models.user import User
 
 
 class TaskListService:
@@ -18,7 +19,6 @@ class TaskListService:
         inbox_item: InboxItem,
         understanding: StructuredUnderstanding,
         title: str | None = None,
-        create_items: bool = True,
     ) -> TaskList:
         task_list = TaskList(
             user_id=user.id,
@@ -32,35 +32,6 @@ class TaskListService:
         )
         session.add(task_list)
         await session.flush()
-
-        if create_items and understanding.list_items:
-            from app.services.tasks import TaskService
-
-            task_service = TaskService()
-            for item in understanding.list_items:
-                item_understanding = understanding.model_copy(
-                    update={
-                        "detected_type": DetectedType.task,
-                        "title": item.title,
-                        "short_summary": item.description or item.title,
-                        "assistant_reply": understanding.assistant_reply,
-                        "helpful_tips": [],
-                        "follow_up_question": None,
-                        "normalized_text": item.title,
-                        "due_at_iso": item.due_at_iso,
-                        "reminder_at_iso": item.due_at_iso,
-                        "list_items": [],
-                        "suggestions": [],
-                    }
-                )
-                await task_service.create_from_understanding(
-                    session,
-                    user=user,
-                    inbox_item=inbox_item,
-                    understanding=item_understanding,
-                    list_id=task_list.id,
-                )
-
         return task_list
 
     async def list_for_user(self, session: AsyncSession, user_id: int) -> list[TaskList]:

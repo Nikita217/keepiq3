@@ -31,4 +31,3 @@ class User(Base):
     task_lists = relationship("TaskList", back_populates="user", cascade="all, delete-orphan")
     tasks = relationship("Task", back_populates="user", cascade="all, delete-orphan")
     bot_actions = relationship("BotAction", back_populates="user", cascade="all, delete-orphan")
-    conversation_sessions = relationship("ConversationSession", back_populates="user", cascade="all, delete-orphan")

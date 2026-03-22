@@ -24,7 +24,6 @@ class AIClient:
         extracted_text: str,
         source_kind: str,
         timezone: str | None,
-        conversation_context: str | None = None,
     ) -> StructuredUnderstanding:
         merged_text = extracted_text or raw_text or ""
         if not self.client:
@@ -37,7 +36,6 @@ class AIClient:
             raw_text=raw_text or "",
             extracted_text=extracted_text or "",
             normalized_hint=merged_text,
-            conversation_context=conversation_context or "none",
             schema=json.dumps(schema, ensure_ascii=False),
         )
 

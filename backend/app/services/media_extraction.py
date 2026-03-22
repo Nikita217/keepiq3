@@ -28,12 +28,6 @@ class MediaExtractionService:
                 response = await self.client.audio.transcriptions.create(
                     model=self.settings.openai_transcription_model,
                     file=audio_file,
-                    language="ru",
-                    prompt=(
-                        "Это голосовое сообщение для личного задачника. "
-                        "Сохраняй формулировки максимально близко к оригиналу. "
-                        "Не теряй даты, время, списки, цены, адреса, имена, номера и количества."
-                    ),
                 )
             return getattr(response, "text", "") or ""
         except Exception as exc:  # noqa: BLE001
@@ -51,16 +45,7 @@ class MediaExtractionService:
                     {
                         "role": "user",
                         "content": [
-                            {
-                                "type": "text",
-                                "text": (
-                                    "Ты помогаешь личному задачнику. Извлеки из изображения полезный текст и короткий смысл. "
-                                    "Ответь обычным русским текстом, без JSON. Сохраняй списки построчно. "
-                                    "Не теряй даты, время, цены, адреса, телефоны, имена, бренды, номера заказов и билетов. "
-                                    "Если это похоже на чеклист, список покупок, бронь, билет, событие или напоминание, "
-                                    "сделай это понятным в извлеченном тексте."
-                                ),
-                            },
+                            {"type": "text", "text": "Extract the useful text and short meaning from this image or screenshot. Respond with plain text in Russian."},
                             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded}"}},
                         ],
                     }

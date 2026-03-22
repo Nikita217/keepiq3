@@ -14,20 +14,13 @@ class AIProcessingService:
         self.ai_client = AIClient()
         self.date_parser = DateParsingService()
 
-    async def analyze(
-        self,
-        *,
-        inbox_item: InboxItem,
-        user: User,
-        conversation_context: str | None = None,
-    ) -> tuple[StructuredUnderstanding, list[float] | None]:
+    async def analyze(self, *, inbox_item: InboxItem, user: User) -> tuple[StructuredUnderstanding, list[float] | None]:
         merged_text = inbox_item.extracted_text or inbox_item.raw_text or ""
         understanding = await self.ai_client.understand(
             raw_text=inbox_item.raw_text or "",
             extracted_text=inbox_item.extracted_text or "",
             source_kind=inbox_item.source_kind,
             timezone=user.timezone,
-            conversation_context=conversation_context,
         )
 
         parsed = self.date_parser.parse(merged_text, user.timezone, source_kind=inbox_item.source_kind)
