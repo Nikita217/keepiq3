@@ -13,12 +13,14 @@ from app.copy.templates import (
     build_keep_inbox_message,
     build_list_saved_message,
     build_task_saved_message,
+    build_tasks_split_message,
 )
 from app.db.session import SessionLocal
 from app.services.actions import ActionService
 from app.services.ai_pipeline import AIProcessingService
 from app.services.inbox import InboxService
 from app.services.tasks import TaskService
+from app.services.understanding_normalizer import normalize_understanding
 from app.services.users import UserService
 
 router = Router()
@@ -34,7 +36,7 @@ extractor = TelegramMessageExtractor()
 async def start(message: Message) -> None:
     text = (
         "Сюда можно присылать текст, голосовые, скрины, ссылки и пересланные сообщения. "
-        "Я разберу это и предложу сохранить как задачу, список или оставить во входящих."
+        "Я разберу это, пойму задачу или список и предложу сохранить в нужном виде."
     )
     await message.answer(text, reply_markup=mini_app_keyboard())
 
@@ -117,11 +119,18 @@ async def handle_action(callback: CallbackQuery) -> None:
         if not inbox_item:
             await callback.answer("Не нашёл исходное сообщение.", show_alert=False)
             return
-        understanding = StructuredUnderstanding.model_validate(inbox_item.ai_payload_json) if inbox_item.ai_payload_json else heuristic_understanding(
-            text=inbox_item.extracted_text or inbox_item.raw_text or "",
-            source_kind=inbox_item.source_kind,
-            timezone=user.timezone,
-        )
+
+        source_text = inbox_item.extracted_text or inbox_item.raw_text or ""
+        if inbox_item.ai_payload_json:
+            stored_understanding = StructuredUnderstanding.model_validate(inbox_item.ai_payload_json)
+            understanding = normalize_understanding(stored_understanding, source_text)
+        else:
+            understanding = heuristic_understanding(
+                text=source_text,
+                source_kind=inbox_item.source_kind,
+                timezone=user.timezone,
+            )
+
         result = await action_service.execute(session, user=user, action=action, understanding=understanding, inbox_item=inbox_item)
         await session.commit()
 
@@ -138,6 +147,9 @@ async def handle_action(callback: CallbackQuery) -> None:
         count = len(understanding.list_items)
         await callback.answer("Сохранил список.")
         await callback.message.answer(build_list_saved_message(task_list.title, count))
+    elif result["kind"] == "task_split":
+        await callback.answer("Разбил на задачи.")
+        await callback.message.answer(build_tasks_split_message(result["count"]))
     else:
         await callback.answer("Оставил во входящих.")
         await callback.message.answer(build_keep_inbox_message())

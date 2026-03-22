@@ -9,6 +9,7 @@ from app.schemas.inbox import InboxActionResult, InboxConvertToListRequest, Inbo
 from app.services.inbox import InboxService
 from app.services.task_lists import TaskListService
 from app.services.tasks import TaskService
+from app.services.understanding_normalizer import normalize_understanding
 
 router = APIRouter()
 inbox_service = InboxService()
@@ -17,9 +18,11 @@ list_service = TaskListService()
 
 
 def _understanding_for_item(item, timezone: str) -> StructuredUnderstanding:
+    source_text = item.extracted_text or item.raw_text or ""
     if item.ai_payload_json:
-        return StructuredUnderstanding.model_validate(item.ai_payload_json)
-    return heuristic_understanding(text=item.extracted_text or item.raw_text or "", source_kind=item.source_kind, timezone=timezone)
+        understanding = StructuredUnderstanding.model_validate(item.ai_payload_json)
+        return normalize_understanding(understanding, source_text)
+    return heuristic_understanding(text=source_text, source_kind=item.source_kind, timezone=timezone)
 
 
 @router.get("", response_model=list[InboxItemOut])

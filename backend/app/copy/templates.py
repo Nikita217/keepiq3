@@ -31,16 +31,38 @@ def format_human_datetime(dt: datetime | None, timezone_name: str | None = None)
     return f"{local_dt.day} {MONTHS[local_dt.month]} в {local_dt:%H:%M}"
 
 
+def _list_preview(understanding: StructuredUnderstanding) -> str | None:
+    if understanding.detected_type != DetectedType.list or not understanding.list_items:
+        return None
+    lines = [f"- {item.title}" for item in understanding.list_items[:4]]
+    if len(understanding.list_items) > 4:
+        lines.append(f"- ...и ещё {len(understanding.list_items) - 4}")
+    return "Список сейчас вижу так:\n" + "\n".join(lines)
+
+
+def _tips_block(understanding: StructuredUnderstanding) -> str | None:
+    if not understanding.helpful_tips:
+        return None
+    lines = [f"- {tip}" for tip in understanding.helpful_tips]
+    return "Может пригодиться:\n" + "\n".join(lines)
+
+
 def build_analysis_message(understanding: StructuredUnderstanding, timezone_name: str | None = None) -> str:
-    if understanding.detected_type == DetectedType.list:
-        count = len(understanding.list_items)
-        return f"Похоже, здесь список из {count} пунктов." if count else "Похоже, это список."
-    if understanding.due_at_iso:
-        dt = format_human_datetime(understanding.due_at, timezone_name)
-        return f"Понял тебя. Похоже, это напоминание на {dt}."
-    if understanding.detected_type == DetectedType.unclear:
-        return "Я не до конца уверен, поэтому пока оставлю это ближе к входящим вариантам."
-    return f"Понял тебя. Похоже, это задача: {understanding.title.strip()}"
+    parts = [understanding.assistant_reply.strip()]
+
+    due_at = format_human_datetime(understanding.due_at, timezone_name)
+    if due_at and understanding.detected_type != DetectedType.list:
+        parts.append(f"Срок сейчас понимаю как {due_at}.")
+
+    list_preview = _list_preview(understanding)
+    if list_preview:
+        parts.append(list_preview)
+
+    tips_block = _tips_block(understanding)
+    if tips_block:
+        parts.append(tips_block)
+
+    return "\n\n".join(part for part in parts if part)
 
 
 def build_keep_inbox_message() -> str:
@@ -49,12 +71,16 @@ def build_keep_inbox_message() -> str:
 
 def build_task_saved_message(task: Task, timezone_name: str | None = None) -> str:
     if task.due_at:
-        return f"Сохранил. Напомню {format_human_datetime(task.due_at, timezone_name)}."
+        return f"Сохранил задачу. Напомню {format_human_datetime(task.due_at, timezone_name)}."
     return "Сохранил как задачу без даты."
 
 
 def build_list_saved_message(title: str, count: int) -> str:
     return f"Сохранил список «{title}». Внутри {count} пунктов."
+
+
+def build_tasks_split_message(count: int) -> str:
+    return f"Разбил это на {count} отдельных задач."
 
 
 def build_reminder_message(task: Task) -> str:

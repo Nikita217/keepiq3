@@ -14,9 +14,9 @@ class ActionTemplateService:
             count = len(understanding.list_items)
             actions.extend(
                 [
-                    {"action_kind": "save_list", "title": f"Создать список из {count} пунктов", "payload": {}},
-                    {"action_kind": "split_into_tasks", "title": f"Разбить на {count} задачи", "payload": {}},
-                    {"action_kind": "save_task", "title": "Сохранить первой задачей", "payload": {}},
+                    {"action_kind": "save_list", "title": f"Сохранить список ({count})", "payload": {}},
+                    {"action_kind": "split_into_tasks", "title": "Разбить на задачи", "payload": {}},
+                    {"action_kind": "save_task", "title": "Сохранить одной задачей", "payload": {}},
                 ]
             )
         elif understanding.due_at_iso:
@@ -24,14 +24,14 @@ class ActionTemplateService:
                 [
                     {"action_kind": "remind_at_detected_time", "title": self._detected_time_label(understanding), "payload": {}},
                     {"action_kind": "save_task_without_date", "title": "Сохранить без даты", "payload": {}},
-                    {"action_kind": "remind_today_evening", "title": "Напомнить сегодня вечером", "payload": {}},
+                    {"action_kind": "save_task", "title": "Сохранить как задачу", "payload": {}},
                 ]
             )
         elif understanding.detected_type == DetectedType.task:
             actions.extend(
                 [
                     {"action_kind": "save_task", "title": "Сохранить как задачу", "payload": {}},
-                    {"action_kind": "remind_tomorrow_10", "title": "Напомнить завтра в 10:00", "payload": {}},
+                    {"action_kind": "remind_tomorrow_10", "title": "Поставить на завтра", "payload": {}},
                     {"action_kind": "save_task_without_date", "title": "Сохранить без даты", "payload": {}},
                 ]
             )
@@ -43,9 +43,6 @@ class ActionTemplateService:
                     {"action_kind": "save_task_without_date", "title": "Сохранить без даты", "payload": {}},
                 ]
             )
-
-        while len(actions) < 3:
-            actions.append({"action_kind": "save_task", "title": "Сохранить как задачу", "payload": {}})
 
         actions = actions[:3]
         actions.append({"action_kind": "keep_in_inbox", "title": "Оставить во входящих", "payload": {}})
@@ -66,5 +63,5 @@ class ActionTemplateService:
     def _detected_time_label(self, understanding: StructuredUnderstanding) -> str:
         due_at = understanding.due_at
         if not due_at:
-            return "Напомнить в это время"
-        return f"Напомнить {due_at.day}.{due_at.month:02d} в {due_at:%H:%M}"
+            return "Поставить на это время"
+        return f"Поставить на {due_at.day}.{due_at.month:02d} в {due_at:%H:%M}"

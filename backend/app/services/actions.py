@@ -75,32 +75,48 @@ class ActionService:
                 user=user,
                 inbox_item=inbox_item,
                 understanding=understanding,
+                create_items=True,
             )
             await self.inbox_service.mark_converted(session, inbox_item, "list")
             return {"kind": "list", "task_list": task_list}
 
         if action.action_kind == "split_into_tasks":
-            task_list = await self.task_list_service.create_from_understanding(
-                session,
-                user=user,
-                inbox_item=inbox_item,
-                understanding=understanding,
-            )
-            for item in understanding.list_items:
-                split_understanding = understanding.model_copy(update={
-                    "title": item.title,
-                    "short_summary": item.description or item.title,
-                    "due_at_iso": item.due_at_iso,
-                })
+            created_count = 0
+            if understanding.list_items:
+                for item in understanding.list_items:
+                    split_understanding = understanding.model_copy(
+                        update={
+                            "title": item.title,
+                            "short_summary": item.description or item.title,
+                            "assistant_reply": understanding.assistant_reply,
+                            "helpful_tips": [],
+                            "ignored_phrases_internal": [],
+                            "normalized_text": item.title,
+                            "due_date": None,
+                            "due_time": None,
+                            "due_at_iso": item.due_at_iso,
+                            "reminder_at_iso": item.due_at_iso,
+                            "list_items": [],
+                            "suggestions": [],
+                        }
+                    )
+                    await self.task_service.create_from_understanding(
+                        session,
+                        user=user,
+                        inbox_item=inbox_item,
+                        understanding=split_understanding,
+                    )
+                    created_count += 1
+            else:
                 await self.task_service.create_from_understanding(
                     session,
                     user=user,
                     inbox_item=inbox_item,
-                    understanding=split_understanding,
-                    list_id=task_list.id,
+                    understanding=understanding,
                 )
-            await self.inbox_service.mark_converted(session, inbox_item, "list")
-            return {"kind": "list", "task_list": task_list}
+                created_count = 1
+            await self.inbox_service.mark_converted(session, inbox_item, "tasks")
+            return {"kind": "task_split", "count": created_count}
 
         override_due_at = self.templates.resolve_due_at(action.action_kind, understanding, user.timezone)
         keep_date = action.action_kind != "save_task_without_date"

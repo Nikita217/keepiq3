@@ -5,6 +5,7 @@ from app.ai.schemas import StructuredUnderstanding
 from app.models.inbox_item import InboxItem
 from app.models.user import User
 from app.services.date_parsing import DateParsingService
+from app.services.understanding_normalizer import normalize_understanding
 
 
 class AIProcessingService:
@@ -33,5 +34,7 @@ class AIProcessingService:
                     "reminder_at_iso": parsed.reminder_at.isoformat() if parsed.reminder_at else None,
                 }
             )
+
+        understanding = normalize_understanding(understanding, merged_text)
         embedding = await self.ai_client.embed(" ".join(filter(None, [understanding.title, understanding.short_summary, understanding.normalized_text])))
         return understanding, embedding
